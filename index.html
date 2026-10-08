@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1c1447"><meta name="build" content="v09_4-20261008-1146"><title>Груми зовёт</title>
+<meta name="theme-color" content="#1c1447"><meta name="build" content="v09_4-20261008-1153"><title>Груми зовёт</title>
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Груми"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231c1447'/%3E%3Cpath d='M32 10l6 16 16 6-16 6-6 16-6-16-16-6 16-6z' fill='%23f2bf45'/%3E%3C/svg%3E">
@@ -23,7 +23,7 @@ button{border:0;cursor:pointer;background:none;padding:0}
 .scene img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%}
 .scene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,#1c1447a8 0,#1c144700 40%,#1c144700 58%,#1c144766 100%)}
 .top{position:absolute;z-index:3;left:0;right:0;top:0;padding:calc(16px + var(--safe-t)) 18px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;color:#fff}
-.hi{font-size:27px;font-weight:800;letter-spacing:-.5px;text-shadow:0 2px 10px #1c1447aa}
+.hi{font-size:clamp(21px,6.4vw,27px);font-weight:800;letter-spacing:-.5px;text-shadow:0 2px 10px #1c1447aa}
 .sub{font-size:14px;margin-top:2px;text-shadow:0 1px 8px #1c1447cc}
 .iconbtn{width:46px;height:46px;border-radius:15px;background:#ffffff2b;backdrop-filter:blur(10px);display:grid;place-items:center;color:#fff;position:relative;flex:none}
 .iconbtn svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -68,6 +68,9 @@ a.item,button.item:active{transform:scale(.995)}
 .note.ok{background:#e4f6ec;color:var(--mint2)}
 .empty{text-align:center;padding:22px 18px;border-radius:22px;background:#fff;box-shadow:0 6px 18px #5a3d7a10;margin-bottom:12px}
 .empty .big{font-size:34px}.empty p{margin:6px 0 0;color:var(--muted);font-size:15px}
+.inst{display:flex;align-items:center;gap:12px;padding:14px;border-radius:22px;background:linear-gradient(135deg,#efe8ff,#ffe3f0);margin-bottom:14px;box-shadow:0 6px 18px #5a3d7a14}
+.inst .btn{width:auto;flex:none}.inst .t1{font-size:15px}.inst .row2{display:flex;gap:14px;margin-top:2px}
+.inst .lnk{color:var(--violet2);font-weight:700;font-size:13px;min-height:36px;padding:0}
 .cheer{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:22px;background:linear-gradient(135deg,#fff1c4,#ffe0ee);margin-bottom:14px}
 /* кнопки */
 .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:54px;border-radius:18px;padding:12px 18px;font-weight:800;font-size:17px;color:#fff;background:linear-gradient(180deg,#8561ea,#6a49d2);box-shadow:0 8px 18px #6a49d240}
@@ -339,7 +342,7 @@ function home(){const L=todayList(),st=stage(),n=L.open.length,u=data.unseen;
  const ach=u.ach.map(id=>(ACH.find(a=>a[5]===id)||[''])[0]).join(' ');
  const cheer=u.n?`<div class="cheer"><span class="medal sm">✦</span><span class="grow"><span class="t1">+${u.stars} ✦ Luma — молодец!</span><span class="t2">Родитель подтвердил ${u.n} ${pl(u.n,['дело','дела','дел'])}${ach?' · новое достижение '+ach:''}</span></span><button class="btn sm" onclick="collect()">Ура!</button></div>`:'';
  $('home').innerHTML=`<div class="scene"><img src="${AS.hero}" alt="" style="object-position:8% 35%"><div class="top"><div><div class="hi">Привет, ${esc(data.profile.name||'друг')}! 🌸</div><div class="sub">${sub}</div></div><div class="tools"><button class="iconbtn ${data.music?'on':''}" aria-label="Фоновая музыка" aria-pressed="${!!data.music}" onclick="toggleMusic()">${data.music?I.music:I.musicoff}</button><button class="iconbtn" aria-label="Для родителей" onclick="go('parent')">${I.lock}${pend?'<span class="dot"></span>':''}</button></div></div>${levelCard(st)}</div>
- <div class="body">${cheer}<div class="h"><h2>Сегодня</h2><button onclick="go('tasks')">Все задания ›</button></div>${list}${msg}
+ <div class="body">${installCard()}${cheer}<div class="h"><h2>Сегодня</h2><button onclick="go('tasks')">Все задания ›</button></div>${list}${msg}
  <button class="item" onclick="askGrumi()"><span class="ico">💬</span><span class="grow"><span class="t1">Что сегодня происходит?</span><span class="t2">Расскажи Груми — он предложит шаги</span></span><span style="color:#b3a9c0;font-size:22px">›</span></button></div>`}
 function collect(){chime();data.unseen={n:0,stars:0,ach:[]};save();render();const e=$('lvl');if(e){e.classList.add('pulse');setTimeout(()=>e.classList.remove('pulse'),900)}}
 function tasksScreen(){const L=todayList(),t=today();const v=ui.tab.tasks;let c='';
@@ -577,13 +580,20 @@ function finishOnb(withPin){
 const isWeb=/^https?:$/.test(location.protocol);
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 let deferredInstall=null,lastUpd=0,installSeen=false;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;installSeen=true;if(ui.screen==='parent')render()});
-window.addEventListener('appinstalled',()=>{deferredInstall=null;toast('Груми установлен ✨')});
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;installSeen=true;if(ui.screen==='parent'||ui.screen==='home')render()});
+window.addEventListener('appinstalled',()=>{deferredInstall=null;try{localStorage.setItem('grumi_installed','1')}catch(e){}render();toast('Груми установлен ✨')});
 function installBlock(){
  if(isStandalone())return'<p class="t2" style="margin:0">Груми уже на экране телефона ✓</p>';
  if(!isWeb)return'<p class="t2" style="margin:0">Установка станет доступна, когда файл будет размещён на сайте (GitHub Pages).</p>';
  if(deferredInstall)return'<button class="btn ghost sm" style="width:100%" onclick="installApp()">Установить на экран телефона</button>';
  return/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="t2" style="margin:0">iPhone: в Safari нажмите «Поделиться» → «На экран “Домой”».</p>':'<p class="t2" style="margin:0">Android: в меню браузера ⋮ выберите «Установить приложение».</p>'}
+function installCard(){
+ if(!isWeb||isStandalone())return'';
+ try{if(localStorage.getItem('grumi_installed')==='1'||+localStorage.getItem('grumi_inst_hide')>Date.now())return''}catch(e){}
+ const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+ const txt=deferredInstall?'Значок появится на главном экране':ios?'В Safari: «Поделиться» → «На экран “Домой”»':'В меню Chrome ⋮ выберите «Установить приложение»';
+ return`<div class="inst"><span class="medal sm">📲</span><span class="grow"><span class="t1">Установить Груми</span><span class="t2">${txt}</span><span class="row2">${!deferredInstall&&!ios?'<button class="lnk" onclick="installDiag()">Не получается?</button>':''}<button class="lnk" style="color:var(--muted)" onclick="hideInstall()">Позже</button></span></span>${deferredInstall?'<button class="btn sm" onclick="installApp()">Установить</button>':''}</div>`}
+function hideInstall(){try{localStorage.setItem('grumi_inst_hide',String(Date.now()+7*864e5))}catch(e){}render()}
 let diagText='';
 async function installDiag(){
  const L=[],ok=(t,v,x)=>L.push((v?'✓ ':'✗ ')+t+(x?': '+x:''));
