@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#1c1447"><meta name="build" content="v09_4-20261008-0825"><title>Груми зовёт</title>
+<meta name="theme-color" content="#1c1447"><meta name="build" content="v09_4-20261008-1146"><title>Груми зовёт</title>
 <link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Груми"><meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231c1447'/%3E%3Cpath d='M32 10l6 16 16 6-16 6-6 16-6-16-16-6 16-6z' fill='%23f2bf45'/%3E%3C/svg%3E">
@@ -417,7 +417,7 @@ function parentScreen(){const v=ui.tab.parent,L=todayList(),pend=data.tasks.filt
   <div class="h"><h2>PIN</h2></div><div class="field"><input id="np1" class="in" type="password" inputmode="numeric" maxlength="6" placeholder="Новый PIN, 4–6 цифр" autocomplete="off"></div><div class="field"><input id="np2" class="in" type="password" inputmode="numeric" maxlength="6" placeholder="Повторите PIN" autocomplete="off"></div><button class="btn ghost" onclick="changePin(false)">Изменить PIN</button>
   <div class="h" style="margin-top:22px"><h2>Резервная копия</h2></div><div class="row"><button class="btn ghost sm" onclick="exportJSON()">Сохранить в файл</button><button class="btn ghost sm" onclick="$('importFile').click()">Загрузить из файла</button></div><input id="importFile" type="file" accept=".json,application/json" style="display:none" onchange="importJSON(this.files[0])">
   <button class="btn soft sm" style="margin-top:10px;width:100%" onclick="restoreBackup()">Вернуть прошлое автосохранение</button><button class="btn soft sm" style="margin-top:10px;width:100%" onclick="showOnb('help')">Как работает приложение</button>
-  <div class="h" style="margin-top:22px"><h2>Приложение</h2></div>${installBlock()}<button class="btn soft sm" style="margin-top:10px;width:100%" onclick="checkUpdate()">Проверить обновление</button><p class="t2" style="margin-top:16px;text-align:center">Груми зовёт · ${VER}</p>`}
+  <div class="h" style="margin-top:22px"><h2>Приложение</h2></div>${installBlock()}${isWeb&&!isStandalone()?'<button class="btn soft sm" style="margin-top:10px;width:100%" onclick="installDiag()">Диагностика установки</button>':''}<button class="btn soft sm" style="margin-top:10px;width:100%" onclick="checkUpdate()">Проверить обновление</button><p class="t2" style="margin-top:16px;text-align:center">Груми зовёт · ${VER}</p>`}
  $('parent').innerHTML=`<div class="phead"><div class="r"><button class="iconbtn" aria-label="Назад" onclick="back()">${I.back}</button><h1>Для родителей</h1><button class="iconbtn" aria-label="Закрыть родительский режим" onclick="lockParent()">${I.x}</button></div>${tabs('parent',[['today','Сегодня'],['week','Неделя'],['stats','Итоги'],['set','Настройки']],true)}</div><div class="pwrap">${c}</div>`}
 $('parent').addEventListener('click',()=>{if(parentOK())touch()});
 function setLimit(n){needParent(()=>{data.dailyLimit=n;save();render()})}
@@ -576,14 +576,33 @@ function finishOnb(withPin){
 /* ---------- установка и обновления (PWA) ---------- */
 const isWeb=/^https?:$/.test(location.protocol);
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
-let deferredInstall=null,lastUpd=0;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;if(ui.screen==='parent')render()});
+let deferredInstall=null,lastUpd=0,installSeen=false;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;installSeen=true;if(ui.screen==='parent')render()});
 window.addEventListener('appinstalled',()=>{deferredInstall=null;toast('Груми установлен ✨')});
 function installBlock(){
  if(isStandalone())return'<p class="t2" style="margin:0">Груми уже на экране телефона ✓</p>';
  if(!isWeb)return'<p class="t2" style="margin:0">Установка станет доступна, когда файл будет размещён на сайте (GitHub Pages).</p>';
  if(deferredInstall)return'<button class="btn ghost sm" style="width:100%" onclick="installApp()">Установить на экран телефона</button>';
  return/iphone|ipad|ipod/i.test(navigator.userAgent)?'<p class="t2" style="margin:0">iPhone: в Safari нажмите «Поделиться» → «На экран “Домой”».</p>':'<p class="t2" style="margin:0">Android: в меню браузера ⋮ выберите «Установить приложение».</p>'}
+let diagText='';
+async function installDiag(){
+ const L=[],ok=(t,v,x)=>L.push((v?'✓ ':'✗ ')+t+(x?': '+x:''));
+ L.push('Груми '+(document.querySelector('meta[name=build]')||{}).content);
+ ok('Открыто по https',location.protocol==='https:',location.origin+location.pathname);
+ ok('Режим приложения (standalone)',isStandalone());
+ const br=navigator.userAgentData&&navigator.userAgentData.brands?navigator.userAgentData.brands.map(b=>b.brand+' '+b.version).join(', '):navigator.userAgent;
+ L.push('Браузер: '+br);
+ const ln=document.querySelector('link[rel=manifest]');ok('Ссылка на манифест в странице',!!ln,ln&&ln.getAttribute('href'));
+ let mf=null;
+ if(ln){try{const r=await fetch(ln.href,{cache:'no-store'});ok('Манифест скачивается',r.ok,r.status+' '+(r.headers.get('content-type')||''));mf=await r.json()}catch(e){ok('Манифест читается',false,String(e).slice(0,70))}}
+ if(mf){ok('id уникальный',!!mf.id&&mf.id!=='./'&&mf.id!=='/',mf.id);L.push('  start_url: '+mf.start_url+' | scope: '+mf.scope+' | display: '+mf.display);
+  for(const i of (mf.icons||[])){const u=new URL(i.src,ln.href).href;const sz=await new Promise(res=>{const im=new Image();im.onload=()=>res(im.naturalWidth+'×'+im.naturalHeight);im.onerror=()=>res('не открывается');im.src=u});ok('Иконка '+i.sizes+' '+(i.purpose||''),/^\d/.test(sz),sz)}}
+ if('serviceWorker' in navigator){try{const rg=await navigator.serviceWorker.getRegistration();ok('Сервис-воркер зарегистрирован',!!rg,rg&&rg.scope);ok('Сервис-воркер активен',!!(rg&&rg.active),rg&&rg.active&&rg.active.state);ok('Страница под управлением воркера',!!navigator.serviceWorker.controller)}catch(e){ok('Сервис-воркер',false,String(e).slice(0,60))}}else ok('Сервис-воркеры поддерживаются',false);
+ ok('Браузер прислал событие установки',installSeen,installSeen?'можно устанавливать':'пока не приходило');
+ try{if(navigator.getInstalledRelatedApps){const a=await navigator.getInstalledRelatedApps();L.push('Связанные установленные приложения: '+(a.length?JSON.stringify(a):'нет'))}}catch(e){}
+ diagText=L.join('\n');
+ modal(`<h2>Диагностика установки</h2><p class="lead">Если установка не предлагается, отправьте этот текст мне.</p><pre style="white-space:pre-wrap;word-break:break-word;font-size:13px;line-height:1.5;background:#fff;border-radius:14px;padding:12px;margin:0 0 12px">${esc(diagText)}</pre><button class="btn" onclick="copyDiag()">Скопировать</button>`)}
+function copyDiag(){try{navigator.clipboard.writeText(diagText).then(()=>toast('Скопировано'),()=>toast('Не удалось скопировать — выделите текст вручную'))}catch(e){toast('Не удалось скопировать — выделите текст вручную')}}
 async function installApp(){if(!deferredInstall)return;deferredInstall.prompt();try{await deferredInstall.userChoice}catch(e){}deferredInstall=null;render()}
 async function checkUpdate(silent){
  if(!isWeb){if(!silent)toast('Проверка обновлений работает в установленной версии');return}
